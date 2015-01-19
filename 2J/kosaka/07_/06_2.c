@@ -1,0 +1,10 @@
+include 1
+stdio 1
+h 1
+int 1
+main 1
+void 1
+printf 2
+Hello 2
+World 2
+n 2
