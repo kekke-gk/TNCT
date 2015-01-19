@@ -1,0 +1,76 @@
+mp3ex06.txt
+s12083 3J18 五味京祐
+
+1.課題
+ポート1のbit0,bit1,bit2,bit3に保護抵抗付きのLEDが接続されているとする。
+　　次のような設計仕様の場合のLED初期化関数initLed_P1()と turnOnLed_P1()，turnOffLed_P1()を作りなさい。
+　　void initLed_P1(void)　LED初期化関数
+　　void turnOnLed_P1(int number) LEDを点灯させる関数。
+　　  ただし，引数は0,1,2,3を取り，LED0,1,2,3をそれぞれ個別に点灯させる。
+　　void turnOffLed_P1(int number) LEDを消灯させる関数。
+　　  ただし，引数は0,1,2,3を取り，LED0,1,2,3をそれぞれ個別に消灯させる。
+　　mainプログラムではこれらの関数を用いて，４つのLEDについて2秒ごとに0,1,2,3番LEDが順に点灯し消灯する
+　　ようにプログラム全体を作りなさい。LEDの点滅は見えないけれど，ポート1のbit0,bit1,bit2,bit3がどこのピン
+　　に見えるか調べて，テスタにてチェックしなさい。
+　　（ヒントP1-B0からP1-B3をこのページ後ろの「参考１ H8ピン配置」で探す）
+
+
+2.使用したプログラム
+#include <3048fone.h>
+
+void initLed_P1()
+{
+	P1.DDR = 0xf;
+}
+
+void turnOnLed_P1(short int number)
+{ 
+	static const unsigned char mask[]={1,2,4,8};
+	P1.DR.BYTE |= mask[number];
+}
+
+void turnOffLed_P1(short int number)
+{
+	static const unsigned char mask[]={0xfe,0xfd,0xfb,0xf7};
+	P1.DR.BYTE &= mask[number];
+}
+
+void waitmsec(int msec)
+{
+	int i,j;
+	for (i=0;i<msec;i++) {
+		for (j=0;j<4190;j++);    
+	}
+}
+
+main()
+{
+	initLed_P1();
+	while(1) {
+		turnOnLed_P1(0);
+		waitmsec(2000);
+		turnOffLed_P1(0);
+		
+		turnOnLed_P1(1);
+		waitmsec(2000);
+		turnOffLed_P1(1);
+		
+		turnOnLed_P1(2);
+		waitmsec(2000);
+		turnOffLed_P1(2);
+		
+		turnOnLed_P1(3);
+		waitmsec(2000);
+		turnOffLed_P1(3);
+	}
+}
+
+
+3.考察
+ポート1のbit1-3はCN3の15-18に対応していた．
+ポート5だったものをポート5に変えるのは，
+3048fone.hに定義してあるおかげで，P5をP1に変更するだけだった．
+
+4.まとめ
+プログラム通り2秒ごとに電圧が順に上がっては下がるを
+繰り返していた．

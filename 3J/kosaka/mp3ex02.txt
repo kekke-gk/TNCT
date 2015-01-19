@@ -1,0 +1,34 @@
+mp3ex02.txt
+s12083 3J18 五味京祐
+
+1.課題
+周期0.5秒，デューティ比50%で左右のLEDが交互に点滅するプログラム
+　　（0.5秒ごとにではないことに注意）
+
+2.使用したプログラム
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+void waitmsec(int msec)
+{
+	int i,j;
+	for (i=0;i<msec;i++) {
+		for (j=0;j<4190;j++);    /*4190は実測によって求めた値 25MHz駆動*/
+	}
+}
+
+main()
+{
+	initLed();
+	while(1) {
+		turnOnLed(0); /*LED0のON*/
+		turnOffLed(1); /*LED1のOFF*/
+		waitmsec(250);
+		turnOffLed(0); /*LED0のOFF*/
+		turnOnLed(1); /*LED1のON*/
+		waitmsec(250);
+	}
+}
+
+3.考察
+周期が5秒,デューティ比50%ということは，5秒点灯5秒消灯ではなく，2.5秒点灯2.5秒消灯である．

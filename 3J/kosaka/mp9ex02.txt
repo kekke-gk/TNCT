@@ -1,0 +1,148 @@
+mp9ex02.txt
+s12083 3J18 五味京祐
+
+1.課題
+前課題の２つプッシュスイッチにより起動する独立動作に加え、プッシュスイッチ２によって起動するも
+う１つの独立動作を行うようにする。
+シリアル通信とテラタームを用いて次の動作をおこなう。
+テラタームで電光掲示板のように「Hello, everyone!」を右から左に流れるように表示する。表
+示中に再度プッシュスイッチが押されたら、表示動作は最初から再表示になる。
+また、LED0、LED1とこの表示はそれぞれ独立動作である。
+電光掲示板のように表示させるには次の文字列を0.1秒ごとに表示ればよい。
+最後まで表示したら、この定型動作は終了である。
+
+"               H\r"
+"              He\r"
+"             Hel\r"
+"            Hell\r"
+"           Hello\r"
+"          Hello,\r"
+       :
+"Hello, everyone!\r"
+"ello, everyone! \r"
+"llo, everyone!  \r"
+"lo, everyone!   \r"
+       :
+"e!              \r"
+"!               \r"
+"                \r"
+
+WindowsCプログラミングで，サンプルを作ると次のようになるので参考にするとよい。
+
+#include <stdio.h>
+#include <windows.h>
+
+char hello[]="                Hello, everyone!                ";
+/*            012345678901234567890123456789012345678901234567890*/
+
+main()
+{
+    int i,j;
+    i=0;
+    while (1) {
+        Sleep(300);//300msお休み windowsの関数
+        printf("<");
+        for (j=0; j<16; j++) putchar(hello[i+j]);//i番目から16個表示
+        printf(">\r");
+        i++;
+        if (i==34) i=0;
+    }
+}
+
+
+
+
+2.使用したプログラム
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+volatile int count1=-1;/*LED0用カウンタ　-1の時は休止中*/
+volatile int count2=-1;/*LED1用カウンタ　-1の時は休止中*/
+volatile int count3=-1;
+
+void putHello(int i){
+	char hello[]="                Hello, everyone!                ";
+	int j;
+
+	for(j=0;j<16;j++) SCI1_printf("%c",hello[i+j]);
+	SCI1_printf("\r");
+}
+
+
+main()
+{
+	initLed();
+	initPushSW();/*PushSWの初期化*/
+	initTimer1Int(10000); /*時間割り込み10000μsec=10msec ch1使用*/
+	E_INT();        /*CPU割り込み許可*/
+	startTimer1();  /*時間割り込みタイマスタートch1*/
+	initSCI1();
+	while(1) {
+		if ((count1==-1 || 50<count1) && checkPushSW(0)==1) {
+			count1=0;
+			turnOnLed(0);
+		} else if (100<count1 && count1<200) {
+			turnOffLed(0);
+		} else if (200<count1 && count1<300) { /*200カウントで2秒経過*/
+			turnOnLed(0);
+		} else if (300<count1) {
+			count1=-1;
+			turnOffLed(0);
+		}
+		
+		if ((count2==-1 || 50<count2) && checkPushSW(1)==1) {
+			count2=0;
+			turnOnLed(1);
+		} else if (100<count2 && count2<200) {
+			turnOffLed(1);
+		} else if (200<count2 && count2<300) { /*200カウントで2秒経過*/
+			turnOnLed(1);
+		} else if (200<count2) { /*200カウントで2秒経過*/
+			count2=-1;
+			turnOffLed(1);
+		}
+		
+		if ((count3==-1 || 50<count3) && checkPushSW(2)==1 ){
+			count3=0;
+		} else if(340<count3){
+			count3=-1;
+		}
+		if (count3!=-1 && count3%10==0){
+			putHello(count3/10);
+		}
+	}
+}
+
+
+#pragma asm
+	.SECTION    MYVEC, DATA, LOCATE=H'000070
+	.ORG        H'000070  ;IMIA1
+	.DATA.L     _TimerIntFunc
+	.SECTION    P,CODE,ALIGN=2 ;これを忘れてはいけない
+#pragma endasm
+
+#pragma interrupt (TimerIntFunc)
+void TimerIntFunc() /*タイマ割り込みルーチン*/
+{
+	static int tick=0;
+	clearTimer1Flag();  /*タイマステータスフラグのクリア 忘れないこと*/
+	if (count1!=-1) count1++;
+	if (count2!=-1) count2++;
+	if (count3!=-1) count3++;
+}
+
+3.考察
+電光掲示板のように表示するために必要なのは
+	\r
+という記号である．
+これは改行などと同じように特別な意味があって，この記号の意味は
+	同じ行の先頭に戻る
+である．
+だから，このプログラムのputHelloという関数は
+	引数の分だけずらした16文字表示して先頭に戻る
+という処理を行なっている．
+
+4.まとめ
+割り込みの処理を利用することで，以前のような待つ関数を用いることなく一定時間ごとの処理を実現できる．
+main関数内で以前のwaitmsecのような関数を呼び出すとそこで処理が止まってしまって，
+スイッチの入力を待ち受けることができない．

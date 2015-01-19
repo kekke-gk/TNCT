@@ -1,0 +1,60 @@
+mp5ex02.txt
+s12083 3J18 五味京祐
+
+1.課題
+　プッシュスイッチの0のみがONの時，0.5秒周期で２つのLED を同時点滅，
+プッシュスイッチの1のみがONの時，1秒周期で２つのLEDを交互点滅，
+プッシュスイッチの2のみがONの時，２秒周期で２つのLEDを交互点滅
+それ以外の状態ではすべて消灯
+
+2.使用したプログラム
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+void waitmsec(int msec)
+{
+	int i,j;
+	for (i=0;i<msec;i++) {
+		for (j=0;j<4190;j++);
+	}
+}
+
+main()
+{
+	initLed();
+	initSCI1();
+	initPushSW();
+	while(1) {
+		if(P4.DR.BYTE>>4 == 0xe/*1110*/){
+			turnOnLed(0);
+			turnOnLed(1);
+			waitmsec(250);
+			turnOffLed(0);
+			turnOffLed(1);
+			waitmsec(250);
+		}else if(P4.DR.BYTE>>4 == 0xd/*1101*/){
+			turnOnLed(0);
+			turnOnLed(1);
+			waitmsec(500);
+			turnOffLed(0);
+			turnOffLed(1);
+			waitmsec(500);
+		}else if(P4.DR.BYTE>>4 == 0xb/*1011*/){
+			turnOnLed(0);
+			turnOnLed(1);
+			waitmsec(1000);
+			turnOffLed(0);
+			turnOffLed(1);
+			waitmsec(1000);
+		}
+	}
+	
+}
+
+3.考察
+P4.DR.BYTEの上位4bitにプッシュスイッチの値が入っている．
+その値は押した場所が0になっている．
+
+4.まとめ
+プログラムを書いてからP4.DR.BYTEのような表現をすると後で
+これが何を表しているかわかりにくいからやめるべきだと思った．

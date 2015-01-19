@@ -1,0 +1,60 @@
+mp6ex02.txt
+s12083 3J18 五味京祐
+
+1.課題
+int1st.cにおいてinitTimer1Int(1000);に変更して１秒周期のLED点滅を行なうプログラムを作りなさい。
+　　（引数がマイクロ秒であること，引数にはshort int型が用いられていることに注意）
+　　ヒント：間引き（割り込み関数が起動しても何回かに一回しかLEDを操作しないようにすればよい）
+　　　　initTimer1Int()関数の定義はh8_3048fone.hにある。
+　　　　initTimer1Int()，startTimer1()はμsec単位の割り込み間隔動作，最長でも約29msecのタイマ割り込みしかできない。
+
+2.使用したプログラム
+/**********************************************************
+時間割り込みによってLEDのON-OFFを行う
+**********************************************************/
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+main()
+{
+	initLed();
+	initTimer1Int(1000); /*時間割り込み1000μsec=1msec ITUch1使用*/
+	E_INT();        /*CPU割り込み許可*/
+	startTimer1();  /*時間割り込みタイマスタートch1*/
+	while(1);       /*なにもしないループ*/
+}
+
+#pragma asm
+    .SECTION    MYVEC, DATA, LOCATE=H'000070
+    .ORG        H'000070  ;IMIA1
+    .DATA.L     _TimerIntFunc
+    .SECTION    P,CODE,ALIGN=2 ;これを忘れてはいけない
+#pragma endasm
+
+#pragma interrupt (TimerIntFunc)
+void TimerIntFunc() /*タイマ割り込みルーチン*/
+{
+	static int tick=0;
+	static int count=0;
+	clearTimer1Flag();  /*タイマステータスフラグのクリア 忘れないこと*/
+	count++;
+	if (count==500) {
+		count=0;
+		if (tick==1) {
+			turnOnLed(0);
+			turnOffLed(1);
+		} else {
+			turnOffLed(0);
+			turnOnLed(1);
+		}
+		tick=1-tick;
+	}
+}
+
+3.考察
+initTimer1Intの引数を変更することで，1msecごとに割り込みを行うようになる．
+その分countが500増えるごとに点灯状態を変更することで，
+1msec * 500の500msec(0.5秒)ごとに点灯状態を変更できるようになる．
+
+4.まとめ
+initTimer1Intの引数，間引き，によって割り込みの処理を調整できることがわかった．

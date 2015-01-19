@@ -1,0 +1,89 @@
+mp8ex01.txt
+s12083 3J18 五味京祐
+
+1.課題
+1msec（1000μsec）ごとの割り込みを用いて，ストップウォッチを作成せよ。
+スタート・ストップボタンなどはキーボードのキーに割り当てる。
+また割り込み関数内で表示を行なってはいけない。グローバル変数のカウンタ変数を
+用いればよいだろう。
+キーの割り当て
+A：スタート（再開，ストップしても再開できる）　B：ストップ　C：クリア
+SCI1_getChar()ではなくSCI1_chkgetChar()の使用を考えなさい。
+ヒント
+どうして割り込み関数内で表示していけないか考えなさい。
+H8CPUからPCへのデータ転送は38400bit/secである。1バイト送信するのに１０ビット
+の転送が必要である。
+割り込み関数は，次の割り込み要求が生ずる前に作業を終了しなければならない。
+1msecごとの割り込みなら，割り込み関数内で文字をH8からPCへ転送するとしたら，
+何文字程度送信できるか考えなさい。
+
+
+2.使用したプログラム
+/**********************************************************
+割り込みを用いた時計　起動時からの経過時間［秒］を
+SCI1へ出力，WINDOWSのHyperTerminalなどで受信できる。
+ただし，設定は
+38400baud, Async, 8bit , NoParity, stop1
+**********************************************************/
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+volatile unsigned int counter;/*0.1s単位でカウント*/
+
+int status=0;/*0ならスタート,1ならストップ*/
+
+main()
+{
+	unsigned int counter1;
+	unsigned int t1,t2;
+	short int tmp;
+	initSCI1(); /*SCI-ch1の初期化*/
+	initTimer1Int(1000); /*ITUch1のインターバルタイマ初期化設定*/
+						  /*単位μsなので，時間割り込み1msec*/
+	E_INT();        /*CPU割り込み許可*/
+	startTimer1();  /*ITUch1タイマスタート*/
+	counter=0;
+	while(1) {
+		tmp=SCI1_chkgetChar();
+		if(tmp=='A' || tmp=='a'){
+			status=0;
+		}else if(tmp=='B' || tmp=='b'){
+			status=1;
+		}else if(tmp=='C' || tmp=='c'){
+			counter=0;
+		}
+		
+		counter1=counter;
+		t1=counter1/1000;
+		t2=counter1%1000;
+		SCI1_printf("%10u.%1u \r",t1,t2); 
+
+	}
+}
+
+
+#pragma asm
+	.SECTION    MYVEC, DATA, LOCATE=H'000070
+	.ORG        H'000070  ;IMIA1
+	.DATA.L     _TimerIntFunc
+	.SECTION    P,CODE,ALIGN=2 ;これを忘れてはいけない
+#pragma endasm
+
+#pragma interrupt (TimerIntFunc)
+void TimerIntFunc() /*インターバルタイマ割り込みルーチン*/
+{
+	if(status==0){
+		counter++;
+	}
+	clearTimer1Flag();  /*ITUch1タイマフラグのクリア 忘れないこと*/
+}
+
+
+3.考察
+1秒間に38400ビットだから1ミリ秒間に38.4ビット
+1文字は1バイトで，1バイトあたり10ビットの転送が必要になるから
+1msecで送れる文字数は4文字程度
+
+4.まとめ
+SCI1_chkgetCharで文字入力を受け取ることができる
+割り込み関数内で表示を行ってはいけない

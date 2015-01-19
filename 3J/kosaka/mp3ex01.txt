@@ -1,0 +1,39 @@
+mp3ex01.txt
+s12083 3J18 五味京祐
+
+1.課題
+周期1秒，デューティ比50%で両方のLEDが同時に点滅するプログラム（mp3ex01.txt）
+　　ただし，周期とは点灯開始時刻から次の点灯開始時刻までの時間のことであり，
+　　デューティ比とは1周期中の点灯時間の割合のことである。例えば周期8秒の点滅で，
+　　点灯時間が2秒だった場合はデューティ比25%である。
+
+2.使用したプログラム
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+void waitmsec(int msec)
+{
+	int i,j;
+	for (i=0;i<msec;i++) {
+		for (j=0;j<4190;j++);    /*4190は実測によって求めた値 25MHz駆動*/
+	}
+}
+
+main()
+{
+	initLed();
+	while(1) {
+		turnOnLed(0); /*LED0のON*/
+		turnOnLed(1); /*LED1のOFF*/
+		waitmsec(500);
+		turnOffLed(0); /*LED0のOFF*/
+		turnOffLed(1); /*LED1のON*/
+		waitmsec(500);
+	}
+}
+
+3.考察
+0.5秒点灯,0.5秒消灯で周期1秒,デューティ比50%となる．
+
+4.まとめ
+

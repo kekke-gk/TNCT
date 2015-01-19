@@ -1,0 +1,61 @@
+mp3ex03.txt
+s12083 3J18 五味京祐
+
+
+1.課題
+0.5秒ごとに点灯状態が変化し，次の点滅パターンを繰り返すプログラム
+左側2回点滅->右側2回点滅->左側1回点滅->右側1回点滅
+
+2.使用したプログラム
+#include <3048fone.h>
+#include "h8_3048fone.h"
+
+void waitmsec(int msec)
+{
+	int i,j;
+	for (i=0;i<msec;i++) {
+		for (j=0;j<4190;j++);    
+	}
+}
+
+main()
+{
+	initLed();
+	while(1) {
+		turnOnLed(1); 
+		waitmsec(125);
+		turnOffLed(1); 
+		waitmsec(125);
+		turnOnLed(1); 
+		waitmsec(125);
+		turnOffLed(1); 
+		waitmsec(125);
+
+		turnOnLed(0); 
+		waitmsec(125);
+		turnOffLed(0); 
+		waitmsec(125);
+		turnOnLed(0); 
+		waitmsec(125);
+		turnOffLed(0); 
+		waitmsec(125);
+
+		turnOnLed(1); 
+		waitmsec(250);
+		turnOffLed(1); 
+		waitmsec(250);
+
+		turnOnLed(0); 
+		waitmsec(250);
+		turnOffLed(0); 
+		waitmsec(250);
+
+
+	}
+}
+
+3.考察
+LEDの番号はしっかり基盤に書いてあることがわかった．
+
+4.まとめ
+LEDを点灯させる関数を作るべきだということがわかった．
